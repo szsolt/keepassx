@@ -94,6 +94,8 @@ endmacro(add_unit_test)
 
 set(TEST_LIBRARIES
     keepassx_core
+    qjson
+    qhttpserver
     ${GCRYPT_LIBRARIES}
     ${ZLIB_LIBRARIES}
 )
