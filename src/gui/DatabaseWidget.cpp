@@ -172,7 +172,8 @@ DatabaseWidget::Mode DatabaseWidget::currentMode()
     else if (currentWidget() == m_mainWidget) {
         return DatabaseWidget::ViewMode;
     }
-    else if (currentWidget() == m_unlockDatabaseWidget) {
+    else if (currentWidget() == m_unlockDatabaseWidget ||
+             currentWidget() == m_databaseOpenWidget) {
         return DatabaseWidget::LockedMode;
     }
     else {
