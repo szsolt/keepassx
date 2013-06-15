@@ -19,13 +19,13 @@
 #include "ui_SearchWidget.h"
 
 #include <QtCore/QTimer>
-#include <QtGui/QAction>
+#include <QtWidgets/QAction>
 #include <QtGui/QDesktopServices>
-#include <QtGui/QHBoxLayout>
-#include <QtGui/QLabel>
-#include <QtGui/QLineEdit>
-#include <QtGui/QMessageBox>
-#include <QtGui/QSplitter>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QSplitter>
 
 #include "autotype/AutoType.h"
 #include "core/FilePath.h"

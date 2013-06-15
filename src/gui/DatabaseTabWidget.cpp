@@ -18,8 +18,8 @@
 #include "DatabaseTabWidget.h"
 
 #include <QtCore/QFileInfo>
-#include <QtGui/QTabWidget>
-#include <QtGui/QMessageBox>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QMessageBox>
 
 #include "autotype/AutoType.h"
 #include "core/Config.h"

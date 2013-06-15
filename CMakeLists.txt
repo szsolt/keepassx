@@ -15,7 +15,7 @@
 
 project(KeePassX)
 
-cmake_minimum_required(VERSION 2.6.4)
+cmake_minimum_required(VERSION 2.8.8)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -29,7 +29,7 @@ option(WITH_LTO "Enable Link Time Optimization (LTO)" OFF)
 option(WITH_CXX11 "Build with the C++ 11 standard" OFF)
 
 set(KEEPASSX_VERSION "2.0 alpha 4")
-set(KEEPASSX_VERSION_NUM "1.9.83")
+set(KEEPASSX_VERSION_NUM "1.9.83-1")
 
 if("${CMAKE_C_COMPILER}" MATCHES "clang$" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_COMPILER_IS_CLANG 1)
@@ -58,7 +58,12 @@ endmacro(add_gcc_compiler_flags)
 
 add_definitions(-DQT_NO_KEYWORDS -DQT_NO_EXCEPTIONS -DQT_NO_STL -DQT_STRICT_ITERATORS -DQT_NO_CAST_TO_ASCII)
 
-add_gcc_compiler_flags("-fno-common -fstack-protector --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2")
+add_gcc_compiler_flags("-fno-common -fstack-protector -D_FORTIFY_SOURCE=2")
+
+if(NOT APPLE)
+  add_gcc_compiler_flags("--param=ssp-buffer-size=4")
+endif()
+
 add_gcc_compiler_flags("-Wall -Wextra -Wundef -Wpointer-arith -Wno-long-long")
 add_gcc_compiler_flags("-Wformat=2 -Wmissing-format-attribute")
 add_gcc_compiler_flags("-fvisibility=hidden")
@@ -147,20 +152,7 @@ if(WITH_TESTS)
   enable_testing()
 endif(WITH_TESTS)
 
-set(QT_REQUIRED_MODULES QtCore QtGui QtTest)
-if(UNIX AND NOT APPLE)
-  set(QT_REQUIRED_MODULES ${QT_REQUIRED_MODULES} QtDBus)
-endif()
-
-find_package(Qt4 4.6.0 REQUIRED ${QT_REQUIRED_MODULES})
-add_definitions(${QT_DEFINITIONS} -DQT_CORE_LIB -DQT_GUI_LIB)
-set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS_DEBUG QT_DEBUG)
-set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS_RELEASE QT_NO_DEBUG)
-set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS_RELWITHDEBINFO QT_NO_DEBUG)
-set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS_MINSIZEREL QT_NO_DEBUG)
-if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-  set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS QT_NO_DEBUG)
-endif()
+find_package(Qt5Widgets REQUIRED)
 
 find_package(Gcrypt REQUIRED)
 
@@ -201,7 +193,9 @@ if(UNIX)
   endif()
 endif()
 
-include_directories(SYSTEM ${QT_INCLUDE_DIR} ${GCRYPT_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
+include_directories(SYSTEM ${GCRYPT_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(src)
 add_subdirectory(share)

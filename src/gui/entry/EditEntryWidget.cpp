@@ -21,11 +21,11 @@
 #include "ui_EditEntryWidgetHistory.h"
 #include "ui_EditEntryWidgetMain.h"
 
-#include <QtGui/QDesktopServices>
-#include <QtGui/QStackedLayout>
-#include <QtGui/QMenu>
-#include <QtGui/QMessageBox>
-#include <QtGui/QSortFilterProxyModel>
+#include <QtCore/QStandardPaths>
+#include <QtWidgets/QStackedLayout>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
+#include <QtCore/QSortFilterProxyModel>
 
 #include "core/Database.h"
 #include "core/Entry.h"
@@ -607,7 +607,7 @@ void EditEntryWidget::insertAttachment()
 
     // TODO: save last used dir
     QString filename = fileDialog()->getOpenFileName(this, tr("Select file"),
-                QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));
+                QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
     if (filename.isEmpty() || !QFile::exists(filename)) {
         return;
     }
@@ -638,7 +638,7 @@ void EditEntryWidget::saveCurrentAttachment()
 
     QString filename = m_attachmentsModel->keyByIndex(index);
     // TODO: save last used dir
-    QDir dir(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
     QString savePath = fileDialog()->getSaveFileName(this, tr("Save attachment"),
                                                        dir.filePath(filename));
     if (!savePath.isEmpty()) {

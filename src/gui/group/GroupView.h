@@ -18,7 +18,7 @@
 #ifndef KEEPASSX_GROUPVIEW_H
 #define KEEPASSX_GROUPVIEW_H
 
-#include <QtGui/QTreeView>
+#include <QtWidgets/QTreeView>
 
 #include "core/Global.h"
 

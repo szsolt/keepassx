@@ -18,7 +18,7 @@
 #ifndef KEEPASSX_EDITWIDGETPROPERTIES_H
 #define KEEPASSX_EDITWIDGETPROPERTIES_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 #include "core/Global.h"
 #include "core/TimeInfo.h"

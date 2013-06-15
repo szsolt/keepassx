@@ -42,9 +42,12 @@
 #include "qsavefile.h"
 #include "qsavefile_p.h"
 
-#include <QtCore/QAbstractFileEngine>
 #include <QtCore/QFileInfo>
 #include <QtCore/QTemporaryFile>
+
+#ifdef Q_OS_UNIX
+#include <errno.h>
+#endif
 
 QSaveFilePrivate::QSaveFilePrivate()
     : tempFile(0), error(QFile::NoError)
@@ -297,11 +300,17 @@ bool QSaveFile::commit()
     QFile::remove(bakname);
     QFile::rename(d->fileName, bakname);
 #endif
-    QAbstractFileEngine* fileEngine = d->tempFile->fileEngine();
-    Q_ASSERT(fileEngine);
-    if (!fileEngine->rename(d->fileName)) {
-        d->error = fileEngine->error();
-        setErrorString(fileEngine->errorString());
+    // On Qt5 QAbstractFileEngine is now in a private header file and
+    // the symbol is not exported.
+#ifdef Q_OS_WIN
+    if (!d->tempFile->rename(d->fileName)) {
+        d->error = d->tempFile->error();
+        setErrorString(d->tempFile->errorString());
+#else
+    if (!::rename(d->tempFile->fileName().toUtf8().constData(), d->fileName.toUtf8().constData()) == 0) {
+        d->error = QFile::RenameError;
+        setErrorString(QString::fromUtf8(::strerror(errno)));
+#endif
         d->tempFile->remove();
         delete d->tempFile;
         d->tempFile = 0;

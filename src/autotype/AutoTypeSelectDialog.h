@@ -20,7 +20,7 @@
 
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QHash>
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 
 #include "core/Global.h"
 

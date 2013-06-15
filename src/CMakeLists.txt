@@ -17,6 +17,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
 
+set(CMAKE_AUTOMOC TRUE)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 set(keepassx_SOURCES
     autotype/AutoType.cpp
     autotype/AutoTypeAction.cpp
@@ -198,17 +201,17 @@ if(MINGW)
       ${CMAKE_SOURCE_DIR}/share/windows/icon.rc)
 endif()
 
-qt4_wrap_ui(keepassx_SOURCES ${keepassx_FORMS})
-qt4_wrap_cpp(keepassx_SOURCES ${keepassx_MOC})
+qt5_wrap_ui(keepassx_SOURCES ${keepassx_FORMS})
+#qt5_wrap_cpp(keepassx_SOURCES ${keepassx_MOC})
 
 add_library(keepassx_core STATIC ${keepassx_SOURCES})
 set_target_properties(keepassx_core PROPERTIES COMPILE_DEFINITIONS KEEPASSX_BUILDING_CORE)
+qt5_use_modules(keepassx_core Core)
 
 add_executable(${PROGNAME} WIN32 MACOSX_BUNDLE ${keepassx_SOURCES_MAINEXE})
+qt5_use_modules(${PROGNAME} Widgets)
 target_link_libraries(${PROGNAME}
                       keepassx_core
-                      ${QT_QTCORE_LIBRARY}
-                      ${QT_QTGUI_LIBRARY}
                       ${GCRYPT_LIBRARIES}
                       ${ZLIB_LIBRARIES})
 
@@ -231,10 +234,10 @@ install(TARGETS ${PROGNAME}
 add_subdirectory(autotype)
 
 if(APPLE AND NOT (${CMAKE_VERSION} VERSION_LESS 2.8.8))
-  if(QT_MAC_USE_COCOA AND EXISTS "${QT_LIBRARY_DIR}/Resources/qt_menu.nib")
-    install(DIRECTORY "${QT_LIBRARY_DIR}/Resources/qt_menu.nib"
-            DESTINATION "${DATA_INSTALL_DIR}")
-  endif()
+  add_custom_target( deploy ALL
+                     COMMAND ${_qt5Core_install_prefix}/bin/macdeployqt ${PROGNAME}.app
+                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+                     DEPENDS ${PROGNAME} )
 
   set(CPACK_GENERATOR "DragNDrop")
   set(CPACK_DMG_FORMAT "UDBZ")
@@ -243,9 +246,6 @@ if(APPLE AND NOT (${CMAKE_VERSION} VERSION_LESS 2.8.8))
   set(CPACK_STRIP_FILES ON)
   set(CPACK_PACKAGE_FILE_NAME "${PROGNAME}-${KEEPASSX_VERSION_NUM}")
   include(CPack)
-
-  include(DeployQt4)
-  install_qt4_executable(${PROGNAME}.app "qjpeg;qgif;qico;qtaccessiblewidgets")
 endif()
 
 if(MINGW AND NOT (${CMAKE_VERSION} VERSION_LESS 2.8.8))

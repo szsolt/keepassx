@@ -19,7 +19,7 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
-#include <QtGui/QMessageBox>
+#include <QtWidgets/QMessageBox>
 
 #include "ui_DatabaseOpenWidget.h"
 #include "core/Database.h"

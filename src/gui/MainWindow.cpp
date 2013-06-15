@@ -19,7 +19,7 @@
 #include "ui_MainWindow.h"
 
 #include <QtGui/QCloseEvent>
-#include <QtGui/QShortcut>
+#include <QtWidgets/QShortcut>
 
 #include "autotype/AutoType.h"
 #include "core/Config.h"

@@ -18,7 +18,7 @@
 #ifndef KEEPASSX_DRAGTABBAR_H
 #define KEEPASSX_DRAGTABBAR_H
 
-#include <QtGui/QTabBar>
+#include <QtWidgets/QTabBar>
 
 #include "core/Global.h"
 

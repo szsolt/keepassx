@@ -17,8 +17,8 @@
 
 #include "DialogyWidget.h"
 
-#include <QtGui/QDialogButtonBox>
-#include <QtGui/QPushButton>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QPushButton>
 #include <QtGui/QKeyEvent>
 
 DialogyWidget::DialogyWidget(QWidget* parent)

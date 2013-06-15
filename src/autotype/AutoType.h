@@ -20,7 +20,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 #include "core/Global.h"
 

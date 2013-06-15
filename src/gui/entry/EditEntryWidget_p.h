@@ -19,9 +19,9 @@
 #define KEEPASSX_EDITENTRYWIDGET_P_H
 
 #include <QtCore/QSize>
-#include <QtGui/QListWidget>
-#include <QtGui/QScrollBar>
-#include <QtGui/QStyledItemDelegate>
+#include <QtWidgets/QListWidget>
+#include <QtWidgets/QScrollBar>
+#include <QtWidgets/QStyledItemDelegate>
 
 class CategoryListViewDelegate : public QStyledItemDelegate
 {

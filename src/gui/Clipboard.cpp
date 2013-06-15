@@ -18,7 +18,7 @@
 #include "Clipboard.h"
 
 #include <QtCore/QTimer>
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <QtGui/QClipboard>
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)

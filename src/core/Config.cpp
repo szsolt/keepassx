@@ -20,8 +20,8 @@
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
 #include <QtCore/QTemporaryFile>
-#include <QtGui/QApplication>
-#include <QtGui/QDesktopServices>
+#include <QtCore/QStandardPaths>
+#include <QtWidgets/QApplication>
 
 Config* Config::m_instance(Q_NULLPTR);
 
@@ -70,7 +70,7 @@ Config::Config(QObject* parent)
 
     userPath += "/keepassx/";
 #else
-    userPath = QDir::fromNativeSeparators(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+    userPath = QDir::fromNativeSeparators(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     userPath += "/keepassx/";
 #endif
 

@@ -18,7 +18,7 @@
 #ifndef KEEPASSX_AUTOTYPEPLATFORMPLUGIN_H
 #define KEEPASSX_AUTOTYPEPLATFORMPLUGIN_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 #include "autotype/AutoTypeAction.h"
 
