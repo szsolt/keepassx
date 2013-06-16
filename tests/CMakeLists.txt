@@ -61,6 +61,10 @@ macro(add_unit_test)
   target_link_libraries(${_test_NAME} ${TEST_LIBS})
   qt5_use_modules(${_test_NAME} Widgets Test)
 
+  if(UNIX AND NOT APPLE)
+    qt5_use_modules(${_test_NAME} DBus)
+  endif()
+
   if(NOT TEST_OUTPUT)
     set(TEST_OUTPUT plaintext)
   endif(NOT TEST_OUTPUT)
@@ -93,10 +97,6 @@ set(TEST_LIBRARIES
     ${GCRYPT_LIBRARIES}
     ${ZLIB_LIBRARIES}
 )
-
-if(UNIX AND NOT APPLE)
-  set(TEST_LIBRARIES ${TEST_LIBRARIES} ${QT_QTDBUS_LIBRARY})
-endif()
 
 set(modeltest_SOURCRS modeltest.cpp)
 qt5_wrap_cpp(modeltest_SOURCRS modeltest.h)

@@ -216,7 +216,7 @@ target_link_libraries(${PROGNAME}
                       ${ZLIB_LIBRARIES})
 
 if(UNIX AND NOT APPLE)
-  target_link_libraries(${PROGNAME} ${QT_QTDBUS_LIBRARY})
+  qt5_use_modules(${PROGNAME} DBus)
 endif()
 
 set_target_properties(${PROGNAME} PROPERTIES ENABLE_EXPORTS ON)
