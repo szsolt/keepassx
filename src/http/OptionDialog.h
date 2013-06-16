@@ -14,7 +14,7 @@
 #ifndef OPTIONDIALOG_H
 #define OPTIONDIALOG_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 namespace Ui {
 class OptionDialog;
