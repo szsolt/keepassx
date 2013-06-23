@@ -72,6 +72,9 @@ void QHttpConnection::socketDisconnected()
         }
         m_request->setSuccessful(false);
         Q_EMIT m_request->end();
+
+        m_request->deleteLater();
+        m_request = 0;
     }
 
     deleteLater();
@@ -147,6 +150,9 @@ int QHttpConnection::MessageComplete(http_parser *parser)
 
     theConnection->m_request->setSuccessful(true);
     Q_EMIT theConnection->m_request->end();
+
+    theConnection->m_request->deleteLater();
+    theConnection->m_request = 0;
     return 0;
 }
 
