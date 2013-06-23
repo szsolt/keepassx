@@ -11,12 +11,14 @@
  ***************************************************************************
  */
 
+#include <QtCore/QDebug>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
+#include <QtCore/QJsonValue>
 #include "EntryConfig.h"
 #include "core/Entry.h"
 #include "core/EntryAttributes.h"
-#include "qjson/parser.h"
-#include "qjson/qobjecthelper.h"
-#include "qjson/serializer.h"
 
 static const char KEEPASSHTTP_NAME[] = "KeePassHttp Settings";  //TODO: duplicated string (also in Service.cpp)
 
@@ -83,18 +85,32 @@ bool EntryConfig::load(const Entry *entry)
     if (s.isEmpty())
         return false;
 
-    bool isOk = false;
-    QVariant v = QJson::Parser().parse(s.toUtf8(), &isOk);
-    if (!isOk || !v.type() == QVariant::Map)
+    QJsonDocument doc = QJsonDocument::fromJson(s.toUtf8());
+    if (doc.isNull())
         return false;
+    QJsonObject obj(doc.object());
 
-    QJson::QObjectHelper::qvariant2qobject(v.toMap(), this);
+    m_allowedHosts.clear();
+    QJsonArray _allow(obj["Allow"].toArray());
+    Q_FOREACH (const QJsonValue& entry, _allow) {
+        m_allowedHosts.insert(entry.toString());
+    }
+    m_deniedHosts.clear();
+    QJsonArray _deny(obj["Deny"].toArray());
+    Q_FOREACH (const QJsonValue& entry, _deny) {
+        m_deniedHosts.insert(entry.toString());
+    }
+    m_realm = obj["Realm"].toString();
+
     return true;
 }
 
 void EntryConfig::save(Entry *entry)
 {
-    QVariant v = QJson::QObjectHelper::qobject2qvariant(this, QJson::QObjectHelper::Flag_None);
-    QByteArray json = QJson::Serializer().serialize(v);
-    entry->attributes()->set(KEEPASSHTTP_NAME, json);
+    QJsonObject obj;
+    obj["Allow"] = QJsonArray::fromStringList(m_allowedHosts.toList());
+    obj["Deny"] = QJsonArray::fromStringList(m_deniedHosts.toList());
+    obj["Realm"] = m_realm;
+    QJsonDocument doc(obj);
+    entry->attributes()->set(KEEPASSHTTP_NAME, doc.toJson());
 }

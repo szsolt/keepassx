@@ -16,10 +16,9 @@
 #include <QtCore/QMetaProperty>
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
-
-#include "qjson/parser.h"
-#include "qjson/qobjecthelper.h"
-#include "qjson/serializer.h"
+#include <QtCore/QDebug>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonArray>
 
 #include "crypto/Random.h"
 #include "crypto/SymmetricCipher.h"
@@ -115,156 +114,104 @@ Request::Request(): m_requestType(INVALID)
 {
 }
 
-QString Request::nonce() const
+QString Request::get(const QString& key) const
 {
-    return m_nonce;
+    QJsonValue v = m_jsonObject[key];
+    return v.isUndefined() ? QString() : v.toString();
+    QJsonObject::const_iterator it = m_jsonObject.find(key);
+    return it == m_jsonObject.constEnd() ? QString() : (*it).toString();
 }
 
-void Request::setNonce(const QString &nonce)
+QString Request::requestTypeStr() const
 {
-    m_nonce = nonce;
+    return get("RequestType");
+}
+
+QString Request::nonce() const
+{
+    return get("Nonce");
 }
 
 QString Request::verifier() const
 {
-    return m_verifier;
-}
-
-void Request::setVerifier(const QString &verifier)
-{
-    m_verifier = verifier;
+    return get("Verifier");
 }
 
 QString Request::id() const
 {
-    return m_id;
-}
-
-void Request::setId(const QString &id)
-{
-    m_id = id;
+    return get("Id");
 }
 
 QString Request::key() const
 {
-    return m_key;
-}
-
-void Request::setKey(const QString &key)
-{
-    m_key = key;
+    return get("Key");
 }
 
 QString Request::submitUrl() const
 {
     Q_ASSERT(m_cipher.isValid());
-    return decrypt(m_submitUrl, m_cipher);
-}
-
-void Request::setSubmitUrl(const QString &submitUrl)
-{
-    m_submitUrl = submitUrl;
+    return decrypt(get("SubmitUrl"), m_cipher);
 }
 
 QString Request::url() const
 {
     Q_ASSERT(m_cipher.isValid());
-    return decrypt(m_url, m_cipher);
-}
-
-void Request::setUrl(const QString &url)
-{
-    m_url = url;
+    return decrypt(get("Url"), m_cipher);
 }
 
 QString Request::realm() const
 {
     Q_ASSERT(m_cipher.isValid());
-    return decrypt(m_realm, m_cipher);
-}
-
-void Request::setRealm(const QString &realm)
-{
-    m_realm = realm;
+    return decrypt(get("Realm"), m_cipher);
 }
 
 QString Request::login() const
 {
     Q_ASSERT(m_cipher.isValid());
-    return decrypt(m_login, m_cipher);
-}
-
-void Request::setLogin(const QString &login)
-{
-    m_login = login;
+    return decrypt(get("Login"), m_cipher);
 }
 
 QString Request::uuid() const
 {
     Q_ASSERT(m_cipher.isValid());
-    return decrypt(m_uuid, m_cipher);
-}
-
-void Request::setUuid(const QString &uuid)
-{
-    m_uuid = uuid;
+    return decrypt(get("Uuid"), m_cipher);
 }
 
 QString Request::password() const
 {
     Q_ASSERT(m_cipher.isValid());
-    return decrypt(m_password, m_cipher);
-}
-
-void Request::setPassword(const QString &password)
-{
-    m_password = password;
+    return decrypt(get("Password"), m_cipher);
 }
 
 bool Request::sortSelection() const
 {
-    return m_sortSelection;
-}
-
-void Request::setSortSelection(bool sortSelection)
-{
-    m_sortSelection = sortSelection;
+    return m_jsonObject["SortSelection"].toBool();
 }
 
 KeepassHttpProtocol::RequestType Request::requestType() const
 {
-    return parseRequest(m_requestType);
-}
-
-QString Request::requestTypeStr() const
-{
     return m_requestType;
-}
-
-void Request::setRequestType(const QString &requestType)
-{
-    m_requestType = requestType;
 }
 
 bool Request::CheckVerifier(const QString &key) const
 {
     Q_ASSERT(!m_cipher.isValid());
+    QString _nonce = nonce();
     m_cipher.init(SymmetricCipher::Aes256, SymmetricCipher::Cbc, SymmetricCipher::Decrypt,
-                  decode64(key), decode64(m_nonce));
-    return decrypt(m_verifier, m_cipher) == m_nonce;
+                  decode64(key), decode64(_nonce));
+    return decrypt(verifier(), m_cipher) == _nonce;
 }
 
 bool Request::fromJson(QString text)
 {
-    bool isok = false;
-    QVariant v = QJson::Parser().parse(text.toUtf8(), &isok);
-    if (!isok)
+    QJsonDocument d = QJsonDocument::fromJson(text.toUtf8());
+    m_jsonObject = d.object();
+    if (d.isNull())
         return false;
 
-    m_requestType.clear();
-    QJson::QObjectHelper::qvariant2qobject(v.toMap(), this);
+    m_requestType = parseRequest(requestTypeStr());
 
-    return requestType() != INVALID;
+    return m_requestType != INVALID;
 }
 
 
@@ -272,13 +219,12 @@ bool Request::fromJson(QString text)
 /// Response
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Response::Response(const Request &request, QString hash):
-    m_requestType(request.requestTypeStr()),
-    m_success(false),
-    m_count(-1),
-    m_version(STR_VERSION),
-    m_hash(hash)
+Response::Response(const Request &request, QString hash)
 {
+    m_jsonObject["Version"] = QString(STR_VERSION);
+    m_jsonObject["Hash"] = hash;
+    m_jsonObject["RequestType"] = request.requestTypeStr();
+    m_jsonObject["Success"] = false;
 }
 
 void Response::setVerifier(QString key)
@@ -289,129 +235,62 @@ void Response::setVerifier(QString key)
     //Generate new IV
     const QByteArray iv = Random::randomArray(m_cipher.blockSize());
     m_cipher.setIv(iv);
-    m_nonce = encode64(iv);
-
-    //Encrypt
-    m_verifier = encrypt(m_nonce, m_cipher);
+    QString _nonce(encode64(iv));
+    m_jsonObject["Nonce"] = _nonce;
+    m_jsonObject["Verifier"] = encrypt(_nonce, m_cipher);
 }
 
 QString Response::toJson()
 {
-    QVariant result = QJson::QObjectHelper::qobject2qvariant(this, QJson::QObjectHelper::Flag_None);
-
-    QJson::Serializer s;
-    s.setIndentMode(QJson::IndentCompact);
-    return s.serialize(result);
-}
-
-KeepassHttpProtocol::RequestType Response::requestType() const
-{
-    return parseRequest(m_requestType);
-}
-
-QString Response::requestTypeStr() const
-{
-    return m_requestType;
-}
-
-QString Response::verifier() const
-{
-    return m_verifier;
-}
-
-QString Response::nonce() const
-{
-    return m_nonce;
-}
-
-QVariant Response::count() const
-{
-    return m_count < 0 ? QVariant() : QVariant(m_count);
-}
-
-void Response::setCount(int count)
-{
-    m_count = count;
-}
-
-QVariant Response::getEntries() const
-{
-    if (m_count < 0 || m_entries.isEmpty())
-        return QVariant();
-
-    QList<QVariant> res;
-    res.reserve(m_entries.size());
-    Q_FOREACH (const Entry &entry, m_entries)
-        res.append(QJson::QObjectHelper::qobject2qvariant(&entry, QJson::QObjectHelper::Flag_None));
-    return res;
+    QJsonDocument json(m_jsonObject);
+    return json.toJson();
 }
 
 void Response::setEntries(const QList<Entry> &entries)
 {
     Q_ASSERT(m_cipher.isValid());
 
-    m_count = entries.count();
-
-    QList<Entry> encryptedEntries;
-    encryptedEntries.reserve(m_count);
+    QJsonArray encEntries;
     Q_FOREACH (const Entry &entry, entries) {
-        Entry encryptedEntry(encrypt(entry.name(), m_cipher),
-                             encrypt(entry.login(), m_cipher),
-                             entry.password().isNull() ? QString() : encrypt(entry.password(), m_cipher),
-                             encrypt(entry.uuid(), m_cipher));
+        QJsonObject encryptedEntry;
+        encryptedEntry["Name"] = encrypt(entry.name(), m_cipher);
+        encryptedEntry["Login"] = encrypt(entry.login(), m_cipher);
+        encryptedEntry["Password"] = entry.password().isNull() ? QString() : encrypt(entry.password(), m_cipher);
+        encryptedEntry["Uuid"] = encrypt(entry.uuid(), m_cipher);
         Q_FOREACH (const StringField & field, entry.stringFields())
-            encryptedEntry.addStringField(encrypt(field.key(), m_cipher),
-                                          encrypt(field.value(), m_cipher));
-        encryptedEntries << encryptedEntry;
+            encryptedEntry[encrypt(field.key(), m_cipher)] = encrypt(field.value(), m_cipher);
+        encEntries.append(encryptedEntry);
     }
-    m_entries = encryptedEntries;
-}
-
-QString Response::hash() const
-{
-    return m_hash;
-}
-
-QString Response::version() const
-{
-    return m_version;
-}
-
-QString Response::id() const
-{
-    return m_id;
+    setCount(encEntries.count());
+    m_jsonObject["Entries"] = encEntries;
 }
 
 void Response::setId(const QString &id)
 {
-    m_id = id;
-}
-
-bool Response::success() const
-{
-    return m_success;
+    m_jsonObject["Id"] = id;
 }
 
 void Response::setSuccess()
 {
-    m_success = true;
-}
-
-QString Response::error() const
-{
-    return m_error;
+    m_jsonObject["Success"] = true;
 }
 
 void Response::setError(const QString &error)
 {
-    m_success = false;
-    m_error = error;
+    m_jsonObject["Success"] = false;
+    m_jsonObject["Error"] = error;
 }
 
+void Response::setCount(int count)
+{
+    m_jsonObject["Count"] = count;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Entry
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//TODO: Replace Entry with QJsonObject ?
 
 Entry::Entry()
 {}
@@ -479,8 +358,10 @@ QVariant Entry::getStringFields() const
 
     QList<QVariant> res;
     res.reserve(m_stringFields.size());
+    /*
     Q_FOREACH (const StringField &stringfield, m_stringFields)
         res.append(QJson::QObjectHelper::qobject2qvariant(&stringfield, QJson::QObjectHelper::Flag_None));
+    */
     return res;
 }
 

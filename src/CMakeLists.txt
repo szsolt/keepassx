@@ -224,13 +224,11 @@ set_target_properties(keepassx_core PROPERTIES COMPILE_DEFINITIONS KEEPASSX_BUIL
 qt5_use_modules(keepassx_core Core)
 
 add_subdirectory(http/qhttpserver)
-add_subdirectory(http/qjson)
 
 add_executable(${PROGNAME} WIN32 MACOSX_BUNDLE ${keepassx_SOURCES_MAINEXE})
 qt5_use_modules(${PROGNAME} Widgets)
 target_link_libraries(${PROGNAME}
                       keepassx_core
-                      qjson
                       qhttpserver
                       ${GCRYPT_LIBRARIES}
                       ${ZLIB_LIBRARIES})
